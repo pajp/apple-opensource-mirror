@@ -1,3 +1,5 @@
+-*- Mode: auto-fill -*-
+
 This script helps you download packages from opensource.apple.com or
 even maintain a mirror with the latest open source packages from a Mac
 OS X release (10.7.4 by default). 
