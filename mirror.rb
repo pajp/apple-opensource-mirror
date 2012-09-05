@@ -31,19 +31,27 @@ if ARGV.length == 0
   end
   exit(0)
 end
+
+def tag_project(dir, release)
+    `xattr -w nu.dll.aosm.#{release} \`date +%s\` "#{dir}"`
+end
+
 ARGV.each do | projectname |
   project = data["projects"][projectname]
   projectdir = "#{projectname}-#{project['version']}"
   tgzurl = "http://opensource.apple.com/tarballs/#{projectname}/#{projectdir}.tar.gz"
-  if File.exists?(File.join(targetdir, projectdir))
+  fulltarget = File.join(targetdir, projectdir)
+  if File.exists?(fulltarget)
     puts "#{projectdir} already downloaded, skipping."
+    tag_project(fulltarget, release)
     next
   end
   print "Downloading and untarring #{tgzurl}…"
   STDOUT.flush
   tgz = Zlib::GzipReader.new(open(tgzurl))
   Minitar.unpack(tgz, tmpdir)
-  File.rename(File.join(tmpdir, projectdir), File.join(targetdir, projectdir))
+  File.rename(File.join(tmpdir, projectdir), fulltarget)
+  tag_project(fulltarget, release)
   puts " OK."
 end
 puts "Kthxbye."
