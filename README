@@ -7,6 +7,10 @@ default).
 
 Note that the .tar.gz will not be saved; only its extracted contents.
 
+Prerequisite:
+
+ sudo gem install plist minitar
+
 Usage:
 
 Run "./mirror.rb" to list all available packages.
