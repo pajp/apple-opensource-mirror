@@ -15,7 +15,7 @@ and so on.
 The script will skip packages that have already been downloaded.
 
 To mirror opensource.apple.com, you can run the following command:
-  ./mirror.rb |grep -v '^#\|OpenAL'|xargs ./mirror.rb
+  ./mirror.rb |grep -v '^#\|WebKit2\|CF'|xargs ./mirror.rb
 
-As of 10.7.4, the OpenAL package is missing, and a full mirror uses
-about 2.7 GB if disk space.
+As of 10.8.1, the CF and WebKit2 packages are missing, and a full
+mirror uses about 2.1 GB if disk space.

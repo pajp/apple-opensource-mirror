@@ -8,7 +8,7 @@ require 'zlib'
 require 'archive/tar/minitar'
 include Archive::Tar
 
-release = 'mac-os-x-1074'
+release = 'mac-os-x-1081'
 targetdir = 'projects'
 tmpdir = '.projects.tmp'
 releaseurl = "http://opensource.apple.com/release/#{release}/"
