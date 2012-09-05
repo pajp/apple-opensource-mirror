@@ -13,6 +13,11 @@ targetdir = 'projects'
 tmpdir = '.projects.tmp'
 releaseurl = "http://opensource.apple.com/release/#{release}/"
 
+if ARGV[0] == "--release"
+   ARGV.shift
+   release = "mac-os-x-" + ARGV.shift.gsub(/\./, "")
+end
+
 releaseplist = "http://opensource.apple.com/plist/#{release}.plist"
 print "# Downloading package list from #{releaseplist}…"
 STDOUT.flush
