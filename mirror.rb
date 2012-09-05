@@ -14,7 +14,7 @@ tmpdir = '.projects.tmp'
 releaseurl = "http://opensource.apple.com/release/#{release}/"
 
 releaseplist = "http://opensource.apple.com/plist/#{release}.plist"
-print "# Downloading package list…"
+print "# Downloading package list from #{releaseplist}…"
 STDOUT.flush
 data = Plist.parse_xml(open(releaseplist).read)
 puts " OK"
