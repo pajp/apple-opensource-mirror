@@ -48,10 +48,14 @@ ARGV.each do | projectname |
   end
   print "Downloading and untarring #{tgzurl}…"
   STDOUT.flush
-  tgz = Zlib::GzipReader.new(open(tgzurl))
-  Minitar.unpack(tgz, tmpdir)
-  File.rename(File.join(tmpdir, projectdir), fulltarget)
-  tag_project(fulltarget, release)
-  puts " OK."
+  begin
+    tgz = Zlib::GzipReader.new(open(tgzurl))
+    Minitar.unpack(tgz, tmpdir)
+    File.rename(File.join(tmpdir, projectdir), fulltarget)
+    tag_project(fulltarget, release)
+    puts " OK."
+  rescue OpenURI::HTTPError
+    puts " failed."
+  end
 end
 puts "Kthxbye."
