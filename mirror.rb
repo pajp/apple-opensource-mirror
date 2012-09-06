@@ -36,6 +36,10 @@ def tag_project(dir, release)
     `xattr -w nu.dll.aosm.#{release} \`date +%s\` "#{dir}"`
 end
 
+if not File.exists?(targetdir)
+  Dir.mkdir(targetdir)
+end
+
 ARGV.each do | projectname |
   project = data["projects"][projectname]
   projectdir = "#{projectname}-#{project['version']}"
