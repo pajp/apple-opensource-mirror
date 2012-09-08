@@ -40,6 +40,10 @@ if not File.exists?(targetdir)
   Dir.mkdir(targetdir)
 end
 
+if not File.exists?(tmpdir)
+  Dir.mkdir(tmpdir)
+end
+
 ARGV.each do | projectname |
   project = data["projects"][projectname]
   projectdir = "#{projectname}-#{project['version']}"
