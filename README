@@ -23,4 +23,4 @@ opensource.apple.com, you can run the following command:
   ./fetch.sh 10.8.1
 
 As of 10.8.1, the CF and WebKit2 packages are missing, and a full
-mirror uses about 2.1 GB if disk space.
+mirror uses about 2.1 GB of disk space.
