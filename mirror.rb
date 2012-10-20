@@ -57,9 +57,14 @@ ARGV.each do | projectname |
   print "Downloading and untarring #{tgzurl}…"
   STDOUT.flush
   begin
+    tmptarget = File.join(tmpdir, projectdir)
+    if not File.exists?(tmptarget)
+      Dir.mkdir(tmptarget)
+      File.chmod(0755, tmptarget)
+    end
     tgz = Zlib::GzipReader.new(open(tgzurl))
     Minitar.unpack(tgz, tmpdir)
-    File.rename(File.join(tmpdir, projectdir), fulltarget)
+    File.rename(tmptarget, fulltarget)
     tag_project(fulltarget, release)
     puts " OK."
   rescue OpenURI::HTTPError
