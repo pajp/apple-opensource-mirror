@@ -61,7 +61,7 @@ projects.keys.sort.each do | project |
     Dir.chdir(basedir)
     Dir.chdir(gitdir)
     if `git remote`.chomp.eql?("")
-      system("curl -i -u #{ENV['GITHUB_AUTH']} https://api.github.com/orgs/aosm/repos -d '{\"name\":\"#{project}\"}' > ../#{project}.github.json");
+      system("curl -i -u #{ENV['GITHUB_AUTH']} https://api.github.com/orgs/aosm/repos -d '{\"name\":\"#{project}\"}' > ../../#{project}.github.json");
       system("git remote add origin git@github.com:aosm/#{project}");
     end
     if not `git tag -l #{version}`.eql?("")
