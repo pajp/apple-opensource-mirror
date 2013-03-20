@@ -31,7 +31,11 @@ module VersionSorter
   end
 end
 
-include VersionSorter
+if not File.exists?("projects")
+  puts "No projects found."
+  exit 1
+end
+
 projects = {}
 Dir.entries("projects").each do | projectdir |
   next if projectdir == "." or projectdir == ".."
@@ -51,6 +55,7 @@ if not ENV.include?('GITHUB_AUTH')
 end
 
 projects.keys.sort.each do | project | 
+  puts "PROJECT: #{project}"
   Dir.chdir(basedir)
   versions = VersionSorter.sort(projects[project])
   gitdir = "gitify/#{project}"
@@ -58,50 +63,54 @@ projects.keys.sort.each do | project |
     Dir.mkdir(gitdir)
   end
   if not File.exists?("#{gitdir}/.git")
-    puts `git init #{gitdir}`
+    system "git init #{gitdir}"
   end
 
-  versions.each do | version | 
-    puts "PROJECT: #{project} VERSION: #{version}" 
-    Dir.chdir(basedir)
-    Dir.chdir(gitdir)
-    json_file = "../../#{project}.github.json"
-    if not File.size?(json_file)
-      puts "Creating GitHub repo"
-      system "curl -i -u #{ENV['GITHUB_AUTH']} https://api.github.com/orgs/aosm/repos -d '{\"name\":\"#{project}\"}' > #{json_file}"
-    end
-    if `git remote`.chomp.eql?("")
-      puts "Adding remote"
-      system "git remote add origin git@github.com:aosm/#{project}"
-    end
-    if not `git tag -l #{version}`.eql?("")
-      puts "Version #{version} already imported to git"
-      next
-    end
-    puts "Importing version #{version}"
-    srcdir="#{basedir}/projects/#{project}-#{version}"
-    xattrs=`xattr -l #{srcdir} | grep '^nu\.dll.aosm\.' | cut -f 1 -d :`.split(/[\r\n]+/)
-    if not system "rsync -avz --delete --exclude=.git #{srcdir}/ ."
-      puts "Error: failed to rsync #{project} version #{version}"
-      exit 1
-    end
-    if not system "git add ."
-      puts "Error: failed to add #{project} version #{version} to git"
-      exit 1
-    end
-    if not system "git commit -am \"version #{version}\""
-      puts "Error: failed to commit #{project} version #{version} to git"
-      exit 1
-    end    
-    if not system "git tag #{version}"
-      puts "Error: failed to tag #{project} version #{version}"
-      exit 1
-    end
-    xattrs.each do | xattr |
-      tag = xattr.sub("nu.dll.aosm.", "")
-      if not system "git tag #{tag}" 
-        puts "Error: failed to set release tag #{tag} for #{project} version #{version}"
+  Dir.chdir(gitdir)
+  json_file = "../../#{project}.github.json"
+  if not File.size?(json_file)
+    puts "Creating GitHub repo"
+    system "curl -i -u #{ENV['GITHUB_AUTH']} https://api.github.com/orgs/aosm/repos -d '{\"name\":\"#{project}\"}' > #{json_file}"
+  end
+  if `git remote`.chomp.eql?("")
+    puts "Adding remote"
+    system "git remote add origin git@github.com:aosm/#{project}"
+  end
+
+  if not `git tag -l #{versions[-1]}`.chomp.eql?("")
+    puts "The latest version (#{versions[-1]}) already imported to git"
+  else
+    versions.each do | version | 
+      puts "VERSION: #{version}"
+      if not `git tag -l #{version}`.chomp.eql?("")
+        puts "Version #{version} already imported to git"
+        next
+      end
+      puts "Importing version #{version}"
+      srcdir="#{basedir}/projects/#{project}-#{version}"
+      xattrs=`xattr -l #{srcdir} | grep '^nu\.dll.aosm\.' | cut -f 1 -d :`.split(/[\r\n]+/)
+      if not system "rsync -avz --delete --exclude=.git #{srcdir}/ ."
+        puts "Error: failed to rsync #{project} version #{version}"
         exit 1
+      end
+      if not system "git add ."
+        puts "Error: failed to add #{project} version #{version} to git"
+        exit 1
+      end
+      if not system "git commit -am \"version #{version}\""
+        puts "Error: failed to commit #{project} version #{version} to git"
+        exit 1
+      end    
+      if not system "git tag #{version}"
+        puts "Error: failed to tag #{project} version #{version}"
+        exit 1
+      end
+      xattrs.each do | xattr |
+        tag = xattr.sub("nu.dll.aosm.", "")
+        if not system "git tag #{tag}" 
+          puts "Error: failed to set release tag #{tag} for #{project} version #{version}"
+          exit 1
+        end
       end
     end
   end
