@@ -45,6 +45,11 @@ end
 
 basedir = Dir.pwd
 
+if not ENV.include?('GITHUB_AUTH')
+  puts "Error: define GITHUB_AUTH with GitHub username:password"
+  exit 1
+end
+
 projects.keys.sort.each do | project | 
   Dir.chdir(basedir)
   versions = VersionSorter.sort(projects[project])
@@ -60,10 +65,14 @@ projects.keys.sort.each do | project |
     puts "PROJECT: #{project} VERSION: #{version}" 
     Dir.chdir(basedir)
     Dir.chdir(gitdir)
+    json_file = "../../#{project}.github.json"
+    if not File.size?(json_file)
+      puts "Creating GitHub repo"
+      system "curl -i -u #{ENV['GITHUB_AUTH']} https://api.github.com/orgs/aosm/repos -d '{\"name\":\"#{project}\"}' > #{json_file}"
+    end
     if `git remote`.chomp.eql?("")
-      puts "Creating GitHub repo and adding remote"
-      system("curl -i -u #{ENV['GITHUB_AUTH']} https://api.github.com/orgs/aosm/repos -d '{\"name\":\"#{project}\"}' > ../../#{project}.github.json")
-      system("git remote add origin git@github.com:aosm/#{project}")
+      puts "Adding remote"
+      system "git remote add origin git@github.com:aosm/#{project}"
     end
     if not `git tag -l #{version}`.eql?("")
       puts "Version #{version} already imported to git"
@@ -72,16 +81,41 @@ projects.keys.sort.each do | project |
     puts "Importing version #{version}"
     srcdir="#{basedir}/projects/#{project}-#{version}"
     xattrs=`xattr -l #{srcdir} | grep '^nu\.dll.aosm\.' | cut -f 1 -d :`.split(/[\r\n]+/)
-    system("rsync -avz --delete --exclude=.git #{srcdir}/ .");
-    system("git add .");
-    system("git commit -am \"version #{version}\""); 
-    system("git tag #{version}");
+    if not system "rsync -avz --delete --exclude=.git #{srcdir}/ ."
+      puts "Error: failed to rsync #{project} version #{version}"
+      exit 1
+    end
+    if not system "git add ."
+      puts "Error: failed to add #{project} version #{version} to git"
+      exit 1
+    end
+    if not system "git commit -am \"version #{version}\""
+      puts "Error: failed to commit #{project} version #{version} to git"
+      exit 1
+    end    
+    if not system "git tag #{version}"
+      puts "Error: failed to tag #{project} version #{version}"
+      exit 1
+    end
     xattrs.each do | xattr |
       tag = xattr.sub("nu.dll.aosm.", "")
-      system("git tag #{tag}");
+      if not system "git tag #{tag}" 
+        puts "Error: failed to set release tag #{tag} for #{project} version #{version}"
+        exit 1
+      end
     end
   end
-  system("git push --all -u origin")
-  system("git push --tags")
+  tree_push_file = "../../#{project}-#{versions[-1]}.tree.pushed"
+  tags_push_file = "../../#{project}-#{versions[-1]}.tags.pushed"
+  if not File.exists?(tree_push_file)
+    if system "git push --all -u origin"
+      system "touch #{tree_push_file}"
+    end
+  end
+  if not File.exists?(tags_push_file)
+    if system "git push --tags"
+      system "touch #{tags_push_file}"
+    end
+  end
 end
 
