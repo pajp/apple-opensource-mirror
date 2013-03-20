@@ -61,15 +61,15 @@ projects.keys.sort.each do | project |
     Dir.chdir(basedir)
     Dir.chdir(gitdir)
     if `git remote`.chomp.eql?("")
-      system("curl -i -u #{ENV['GITHUB_AUTH']} https://api.github.com/orgs/aosm/repos -d '{\"name\":\"#{project}\"}' > ../../#{project}.github.json");
-      system("git remote add origin git@github.com:aosm/#{project}");
+      puts "Creating GitHub repo and adding remote"
+      system("curl -i -u #{ENV['GITHUB_AUTH']} https://api.github.com/orgs/aosm/repos -d '{\"name\":\"#{project}\"}' > ../../#{project}.github.json")
+      system("git remote add origin git@github.com:aosm/#{project}")
     end
     if not `git tag -l #{version}`.eql?("")
-      puts "already imported to git"
-      system("git push --all -u origin")
-      system("git push --tags")
+      puts "Version #{version} already imported to git"
       next
     end
+    puts "Importing version #{version}"
     srcdir="#{basedir}/projects/#{project}-#{version}"
     xattrs=`xattr -l #{srcdir} | grep '^nu\.dll.aosm\.' | cut -f 1 -d :`.split(/[\r\n]+/)
     system("rsync -avz --delete --exclude=.git #{srcdir}/ .");
@@ -80,8 +80,8 @@ projects.keys.sort.each do | project |
       tag = xattr.sub("nu.dll.aosm.", "")
       system("git tag #{tag}");
     end
-    system("git push --all -u origin")
-    system("git push --tags")
   end
+  system("git push --all -u origin")
+  system("git push --tags")
 end
 
