@@ -45,6 +45,12 @@ static const char rcsid[] =
   "$FreeBSD: src/usr.bin/uudecode/uudecode.c,v 1.13.2.3 2002/04/22 13:12:46 jmallett Exp $";
 #endif /* not lint */
 
+#ifdef __APPLE__
+#include <get_compat.h>
+#else
+#define COMPAT_MODE(a,b) (1)
+#endif /* __APPLE__ */
+
 /*
  * uudecode [file ...]
  *
@@ -168,6 +174,7 @@ decode2(flag)
 	char buffn[MAXPATHLEN+1]; /* file name buffer */
 	char *mode, *s;
 	void *mode_handle;
+	bool writeToStdout;
 
 	base64 = ignore = 0;
 	/* search for header line */
@@ -202,9 +209,13 @@ decode2(flag)
 			errx(1, "no filename in input file");
 	}
 
+	/* POSIX says "/dev/stdout" is a 'magic cookie' not a special file. */
+	writeToStdout = pflag || (strcmp(outfile, "/dev/stdout") == 0 );
+
 	if (strlcpy(buf, outfile, sizeof(buf)) >= sizeof(buf))
 		errx(1, "%s: filename too long", outfile);
-	if (!sflag && !pflag) {
+
+	if (!sflag && !writeToStdout) {
 		strlcpy(buffn, buf, sizeof(buffn)); 
 		if (strrchr(buffn, '/') != NULL)
 			strncpy(buf, strrchr(buffn, '/') + 1, sizeof(buf));
@@ -237,18 +248,20 @@ decode2(flag)
 	}
 
 	/* create output file, set mode */
-	if (pflag)
-		; /* print to stdout */
-
-	else {
+	if (!writeToStdout) {
+		int		newmode;
+		
 		mode_handle = setmode(mode);
 		if (mode_handle == NULL)
 			err(1, "setmode()");
+		newmode = getmode(mode_handle, 0);
+		if (!COMPAT_MODE("bin/uudecode", "Unix2003")) {
+			newmode &= 0666;	// explicitly mask off eXecutable bits
+		}
 		if (iflag && !access(buf, F_OK)) {
 			(void)fprintf(stderr, "not overwritten: %s\n", buf);
 			ignore++;
-		} else if (!freopen(buf, "w", stdout) ||
-		    fchmod(fileno(stdout), getmode(mode_handle, 0) & 0666)) {
+		} else if (!freopen(buf, "w", stdout) || fchmod(fileno(stdout), newmode)) {
 			warn("%s: %s", buf, filename);
 			return(1);
 		}

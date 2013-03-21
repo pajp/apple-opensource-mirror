@@ -97,7 +97,11 @@ main(int argc, char **argv)
 	else if (isatty(fileno(stderr)))
 		myttyfd = fileno(stderr);
 	else
-		errx(1, "can't find your tty");
+		myttyfd=-1;
+	if(myttyfd == -1)
+		mytty = "tty??";
+	else
+	{
 	if (!(mytty = ttyname(myttyfd)))
 		errx(1, "can't find your tty's name");
 	if ((cp = rindex(mytty, '/')))
@@ -106,7 +110,7 @@ main(int argc, char **argv)
 		exit(1);
 	if (!msgsok)
 		errx(1, "you have write permission turned off");
-
+	}
 	myuid = getuid();
 
 	/* check args */
