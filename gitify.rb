@@ -80,7 +80,7 @@ projects.keys.sort.each do | project |
   end
 
   Dir.chdir(gitdir)
-  json_file = "../../#{project}.github.json"
+  json_file = "../../metadata/#{project}.github.json"
   if not File.size?(json_file)
     puts "Creating GitHub repo"
     system "curl -i -u #{ENV['GITHUB_AUTH']} https://api.github.com/orgs/aosm/repos -d '{\"name\":\"#{project}\"}' > #{json_file}"
@@ -127,8 +127,8 @@ projects.keys.sort.each do | project |
       end
     end
   end
-  tree_push_file = "../../#{project}-#{versions[-1]}.tree.pushed"
-  tags_push_file = "../../#{project}-#{versions[-1]}.tags.pushed"
+  tree_push_file = "../../metadata/#{project}-#{versions[-1]}.tree.pushed"
+  tags_push_file = "../../metadata/#{project}-#{versions[-1]}.tags.pushed"
   if not File.exists?(tree_push_file)
     if system "git push --all -u origin"
       system "touch #{tree_push_file}"
