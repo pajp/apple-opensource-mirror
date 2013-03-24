@@ -1,4 +1,15 @@
 #!/usr/bin/env ruby
+#
+# This script iterates over all projects downloaded by mirror.rb and fetch.sh,
+# creates a git repository for each project and attempts to create a git commit
+# for each project version in the correct order. It also creates git tags for
+# the OS releases containing a particular version, making it easy to track
+# changes between OS releases and e.g. get diffs between arbitrary versions
+#
+
+# problematic projects
+ignore = [ 'libauto' ]
+
 require 'strscan'
 
 # https://github.com/jordi/version_sorter/blob/master/version_sorter.rb
@@ -40,6 +51,8 @@ projects = {}
 Dir.entries("projects").each do | projectdir |
   next if projectdir == "." or projectdir == ".."
   projectname, projectversion = projectdir.split("-")
+  next if ignore.include?(projectname)
+
   if not projects[projectname]
     projects[projectname] = [ projectversion ]
   else
