@@ -63,12 +63,18 @@ end
 basedir = Dir.pwd
 
 if not ENV.include?('GITHUB_AUTH')
-  puts "Error: define GITHUB_AUTH with GitHub username:password"
-  exit 1
+  puts "Warning: GITHUB_AUTH not defined, will not create GitHub projects"
 end
+
+index = open("projects.html", "w")
+
+basehref = "http://github.com/aosm/"
+index.puts "<ul>"
 
 projects.keys.sort.each do | project | 
   puts "PROJECT: #{project}"
+  index.puts "<li><a id=\"#{project}\" href=\"#{basehref}#{project}\">#{project}</a>: "
+
   Dir.chdir(basedir)
   versions = VersionSorter.sort(projects[project])
   gitdir = "gitify/#{project}"
@@ -81,14 +87,32 @@ projects.keys.sort.each do | project |
 
   Dir.chdir(gitdir)
   json_file = "../../metadata/#{project}.github.json"
-  if not File.size?(json_file)
+  if not File.size?(json_file) and ENV.include?('GITHUB_AUTH')
     puts "Creating GitHub repo"
     system "curl -i -u #{ENV['GITHUB_AUTH']} https://api.github.com/orgs/aosm/repos -d '{\"name\":\"#{project}\"}' > #{json_file}"
   end
-  if `git remote`.chomp.eql?("")
+  if ENV.include?('GITHUB_AUTH') and `git remote`.chomp.eql?("")
     puts "Adding remote"
     system "git remote add origin git@github.com:aosm/#{project}"
   end
+
+  puts "Generating HTML"
+  index.puts "versions: <ul>"
+  versions.each do | version |
+    version_os_printed = {}
+    index.puts "<li><a id=\"#{project}-#{version}\" href=\"#{basehref}#{project}/tree/#{version}\">#{version}</a> "
+    srcdir = "#{basedir}/projects/#{project}-#{version}"
+    xattrs = `xattr -l #{srcdir} | grep '^nu\.dll.aosm\.' | cut -f 1 -d :`.split(/[\r\n]+/)
+    index.puts " in OS releases: "
+    xattrs.each do | xattr |
+      tag = xattr.sub("nu.dll.aosm.", "")
+      if not version_os_printed.include?(tag)
+        index.puts "<a href=\"#{basehref}#{project}/tree/#{tag}\">#{tag}</a> "
+        version_os_printed[tag] = true
+      end
+    end
+  end
+  index.puts "</ul>"
 
   if not `git tag -l #{versions[-1]}`.chomp.eql?("")
     puts "The latest version (#{versions[-1]}) already imported to git"
@@ -140,4 +164,5 @@ projects.keys.sort.each do | project |
     end
   end
 end
-
+index.puts "</ul>"
+index.close
