@@ -48,11 +48,20 @@ if not File.exists?("projects")
 end
 
 projects = {}
+
 Dir.entries("projects").each do | projectdir |
   next if projectdir == "." or projectdir == ".."
   projectname, projectversion = projectdir.split("-")
   next if ignore.include?(projectname)
-
+  if ARGV.count > 0
+    inargs = false
+    ARGV.each do | arg |
+      if projectname == arg
+        inargs = true
+      end
+    end
+    next unless inargs;
+  end
   if not projects[projectname]
     projects[projectname] = [ projectversion ]
   else
