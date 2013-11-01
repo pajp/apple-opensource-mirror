@@ -143,9 +143,15 @@ projects.keys.sort.each do | project |
         puts "Error: failed to add #{project} version #{version} to git"
         exit 1
       end
-      if not system "git commit -am \"version #{version}\""
-        puts "Error: failed to commit #{project} version #{version} to git"
-        exit 1
+      gitresult = `git commit -am \"version #{version}\"`
+      puts gitresult
+      if $?.to_i != 0
+        if gitresult =~ /nothing to commit/
+          puts "Warning: nothing to commit for #{project} version #{version}"
+        else
+          puts "Error: failed to commit #{project} version #{version} to git"
+          exit 1
+        end
       end    
       if not system "git tag #{version}"
         puts "Error: failed to tag #{project} version #{version}"
