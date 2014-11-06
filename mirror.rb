@@ -16,7 +16,7 @@ releaseurl = "http://opensource.apple.com/release/#{release}/"
 if ARGV[0] == "--release"
   ARGV.shift
   release = "mac-os-x-" + ARGV.shift.gsub(/\./, "")
-  if release =~ /^mac-os-x-109/
+  if release =~ /^mac-os-x-109/  || release =~ /^mac-os-x-1010/
      release = release.sub(/^mac-/, "")
   end
 end
