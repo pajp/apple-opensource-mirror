@@ -98,7 +98,7 @@ projects.keys.sort.each do | project |
   json_file = "../../metadata/#{project}.github.json"
   if not File.size?(json_file) and ENV.include?('GITHUB_AUTH')
     puts "Creating GitHub repo"
-    system "curl -i -u #{ENV['GITHUB_AUTH']} https://api.github.com/orgs/aosm/repos -d '{\"name\":\"#{project}\"}' > #{json_file}"
+    system "curl -f -i -u #{ENV['GITHUB_AUTH']} -H X-GitHub-OTP:#{ENV['GITHUB_OTP']} https://api.github.com/orgs/aosm/repos -d '{\"name\":\"#{project}\"}' > #{json_file}"
   end
   if ENV.include?('GITHUB_AUTH') and `git remote`.chomp.eql?("")
     puts "Adding remote"
